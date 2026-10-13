@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ISL Kiosk Service Flow State Machine Schema",
+  "type": "object",
+  "required": [
+    "service_id",
+    "service_name",
+    "initial_state",
+    "states"
+  ],
+  "properties": {
+    "service_id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+    "service_name": {
+      "type": "object",
+      "required": ["en", "hi", "mr"],
+      "properties": {
+        "en": { "type": "string" },
+        "hi": { "type": "string" },
+        "mr": { "type": "string" }
+      }
+    },
+    "description": { "type": "string" },
+    "initial_state": { "type": "string" },
+    "states": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "id",
+          "prompt",
+          "clerk_hint",
+          "active_vocab",
+          "confidence_threshold",
+          "min_margin",
+          "transitions",
+          "timeout_seconds",
+          "on_timeout"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "prompt": {
+            "type": "object",
+            "required": ["en", "hi", "mr"],
+            "properties": {
+              "en": { "type": "string" },
+              "hi": { "type": "string" },
+              "mr": { "type": "string" }
+            }
+          },
+          "clerk_hint": {
+            "type": "object",
+            "required": ["en", "hi", "mr"],
+            "properties": {
+              "en": { "type": "string" },
+              "hi": { "type": "string" },
+              "mr": { "type": "string" }
+            }
+          },
+          "active_vocab": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1
+          },
+          "confidence_threshold": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "min_margin": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "transitions": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "minimum": 5,
+            "maximum": 300
+          },
+          "on_timeout": { "type": "string" },
+          "required_documents": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "fee": {
+            "type": "object",
+            "properties": {
+              "amount_inr": { "type": "number", "minimum": 0 },
+              "exemptions": { "type": "string" }
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

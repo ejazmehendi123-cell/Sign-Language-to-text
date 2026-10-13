@@ -1,0 +1,205 @@
+{
+  "service_id": "birth_certificate",
+  "service_name": {
+    "en": "Birth Certificate Service",
+    "hi": "जन्म प्रमाणपत्र सेवा",
+    "mr": "जन्म प्रमाणपत्र सेवा"
+  },
+  "description": "Counter service flow for issuing or inquiring about a birth certificate.",
+  "initial_state": "select_service_type",
+  "states": {
+    "select_service_type": {
+      "id": "select_service_type",
+      "prompt": {
+        "en": "What do you need regarding birth certificates? (Sign CERTIFICATE, FORM, or STATUS)",
+        "hi": "जन्म प्रमाणपत्र के संबंध में क्या चाहिए? (प्रमाणपत्र, फॉर्म, या स्थिति का संकेत दें)",
+        "mr": "जन्म प्रमाणपत्राबद्दल काय हवे आहे? (प्रमाणपत्र, फॉर्म, किंवा स्थितीची खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Waiting for citizen to select request type: New Certificate, Form, or Status Inquiry.",
+        "hi": "नागरिक द्वारा अनुरोध प्रकार चयन की प्रतीक्षा: नया प्रमाणपत्र, प्रपत्र, या स्थिति।",
+        "mr": "नागरिकाकडून विनंती प्रकार निवडण्याची प्रतीक्षा: नवीन प्रमाणपत्र, अर्ज, किंवा स्थिती."
+      },
+      "active_vocab": ["certificate", "form", "status", "help"],
+      "confidence_threshold": 0.65,
+      "min_margin": 0.15,
+      "transitions": {
+        "certificate": "confirm_documents",
+        "form": "form_guidance",
+        "status": "status_check",
+        "help": "call_clerk"
+      },
+      "timeout_seconds": 45,
+      "on_timeout": "call_clerk"
+    },
+    "confirm_documents": {
+      "id": "confirm_documents",
+      "prompt": {
+        "en": "Do you have the hospital discharge slip and parents' ID proofs? (Sign YES or NO)",
+        "hi": "क्या आपके पास अस्पताल पर्ची और माता-पिता का पहचान पत्र है? (हाँ या नहीं का संकेत दें)",
+        "mr": "तुमच्याकडे हॉस्पिटल डिस्चार्ज स्लिप आणि पालकांचे ओळखपत्र आहे का? (हो किंवा नाही खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Citizen is verifying document availability.",
+        "hi": "नागरिक दस्तावेज़ उपलब्धता सत्यापित कर रहा है।",
+        "mr": "नागरिक कागदपत्रांची उपलब्धता तपासत आहे."
+      },
+      "active_vocab": ["yes", "no", "repeat", "help"],
+      "confidence_threshold": 0.70,
+      "min_margin": 0.20,
+      "transitions": {
+        "yes": "fee_payment",
+        "no": "missing_document_info",
+        "repeat": "confirm_documents",
+        "help": "call_clerk"
+      },
+      "timeout_seconds": 45,
+      "on_timeout": "call_clerk",
+      "required_documents": [
+        "hospital_discharge_card",
+        "parents_aadhaar_card",
+        "address_proof"
+      ]
+    },
+    "missing_document_info": {
+      "id": "missing_document_info",
+      "prompt": {
+        "en": "Please bring hospital discharge summary and parents' Aadhaar. Do you need a checklist? (YES / NO)",
+        "hi": "कृपया अस्पताल पर्ची और माता-पिता का आधार कार्ड लाएँ। क्या आपको चेकलिस्ट चाहिए? (हाँ / नहीं)",
+        "mr": "कृपया हॉस्पिटल स्लिप आणि पालकांचे आधार आणा. चेकलिस्ट हवी आहे का? (हो / नाही)"
+      },
+      "clerk_hint": {
+        "en": "Citizen is missing required documents. Offer printout checklist.",
+        "hi": "नागरिक के पास आवश्यक दस्तावेज़ नहीं हैं। चेकलिस्ट प्रिंट दें।",
+        "mr": "नागरिकाकडे आवश्यक कागदपत्रे नाहीत. चेकलिस्ट प्रिंट द्या."
+      },
+      "active_vocab": ["yes", "no", "thank_you"],
+      "confidence_threshold": 0.65,
+      "min_margin": 0.15,
+      "transitions": {
+        "yes": "completed",
+        "no": "completed",
+        "thank_you": "completed"
+      },
+      "timeout_seconds": 30,
+      "on_timeout": "completed"
+    },
+    "fee_payment": {
+      "id": "fee_payment",
+      "prompt": {
+        "en": "Government fee is ₹20. Ready to proceed to payment counter? (Sign YES or NO)",
+        "hi": "सरकारी शुल्क ₹20 है। क्या आप भुगतान काउंटर पर जाने के लिए तैयार हैं? (हाँ या नहीं)",
+        "mr": "शासकीय शुल्क ₹२० आहे. पेमेंट काउंटरवर जाण्यास तयार आहात का? (हो किंवा नाही)"
+      },
+      "clerk_hint": {
+        "en": "Fee notice shown: ₹20 INR.",
+        "hi": "शुल्क सूचना: ₹20 रुपये।",
+        "mr": "शुल्क माहिती: ₹२० रुपये."
+      },
+      "active_vocab": ["yes", "no", "fee", "wait"],
+      "confidence_threshold": 0.70,
+      "min_margin": 0.20,
+      "transitions": {
+        "yes": "completed",
+        "fee": "fee_payment",
+        "no": "call_clerk",
+        "wait": "call_clerk"
+      },
+      "timeout_seconds": 40,
+      "on_timeout": "call_clerk",
+      "fee": {
+        "amount_inr": 20,
+        "exemptions": "Free if registered within 21 days of birth"
+      }
+    },
+    "form_guidance": {
+      "id": "form_guidance",
+      "prompt": {
+        "en": "Form No. 1 is available at counter 3 or download online. Do you want to submit now? (YES / NO)",
+        "hi": "प्रपत्र संख्या 1 काउंटर 3 पर उपलब्ध है। क्या आप अभी जमा करना चाहते हैं? (हाँ / नहीं)",
+        "mr": "फॉर्म क्र. १ काउंटर ३ वर उपलब्ध आहे. आत्ता सादर करू इच्छिता का? (हो किंवा नाही)"
+      },
+      "clerk_hint": {
+        "en": "Citizen guided to Form No. 1.",
+        "hi": "नागरिक को प्रपत्र 1 के लिए निर्देशित किया गया।",
+        "mr": "नागरिकाला फॉर्म १ कडे निर्देशित केले."
+      },
+      "active_vocab": ["yes", "no", "thank_you"],
+      "confidence_threshold": 0.65,
+      "min_margin": 0.15,
+      "transitions": {
+        "yes": "confirm_documents",
+        "no": "completed",
+        "thank_you": "completed"
+      },
+      "timeout_seconds": 35,
+      "on_timeout": "completed"
+    },
+    "status_check": {
+      "id": "status_check",
+      "prompt": {
+        "en": "Have you brought your application slip with acknowledgment number? (Sign YES or NO)",
+        "hi": "क्या आपके पास पावती संख्या वाली आवेदन पर्ची है? (हाँ या नहीं)",
+        "mr": "तुमच्याकडे पोचपावती क्रमांक असलेली अर्ज पावती आहे का? (हो किंवा नाही)"
+      },
+      "clerk_hint": {
+        "en": "Citizen checking application status. Requesting acknowledgment receipt.",
+        "hi": "नागरिक स्थिति की जांच कर रहा है। पावती रसीद मांगें।",
+        "mr": "नागरिक अर्जाची स्थिती तपासत आहे. पोचपावती मागा."
+      },
+      "active_vocab": ["yes", "no", "help"],
+      "confidence_threshold": 0.65,
+      "min_margin": 0.15,
+      "transitions": {
+        "yes": "call_clerk",
+        "no": "call_clerk",
+        "help": "call_clerk"
+      },
+      "timeout_seconds": 35,
+      "on_timeout": "call_clerk"
+    },
+    "call_clerk": {
+      "id": "call_clerk",
+      "prompt": {
+        "en": "The clerk has been notified. Please wait a moment.",
+        "hi": "अधिकारी को सूचित कर दिया गया है। कृपया प्रतीक्षा करें।",
+        "mr": "अधिकाऱ्याला सूचित केले गेले आहे. कृपया थोडा वेळ थांबा."
+      },
+      "clerk_hint": {
+        "en": "CITIZEN ASSISTANCE REQUESTED: Direct clerk intervention needed.",
+        "hi": "नागरिक सहायता अनुरोध: अधिकारी का सीधा हस्तक्षेप आवश्यक।",
+        "mr": "नागरिक मदत विनंती: थेट लिपिक हस्तक्षेपाची गरज."
+      },
+      "active_vocab": ["wait", "thank_you"],
+      "confidence_threshold": 0.60,
+      "min_margin": 0.10,
+      "transitions": {
+        "wait": "call_clerk",
+        "thank_you": "completed"
+      },
+      "timeout_seconds": 60,
+      "on_timeout": "completed"
+    },
+    "completed": {
+      "id": "completed",
+      "prompt": {
+        "en": "Thank you! Your transaction is recorded. Have a pleasant day.",
+        "hi": "धन्यवाद! आपका अनुरोध दर्ज हो गया है। आपका दिन शुभ हो।",
+        "mr": "धन्यवाद! तुमची विनंती नोंदवली गेली आहे. आपला दिवस चांगला जावो."
+      },
+      "clerk_hint": {
+        "en": "Service interaction complete. Summary generated.",
+        "hi": "सेवा संवाद पूर्ण हुआ। सारांश उत्पन्न।",
+        "mr": "सेवा संवाद पूर्ण झाला. सारांश तयार."
+      },
+      "active_vocab": ["thank_you"],
+      "confidence_threshold": 0.60,
+      "min_margin": 0.10,
+      "transitions": {
+        "thank_you": "select_service_type"
+      },
+      "timeout_seconds": 15,
+      "on_timeout": "select_service_type"
+    }
+  }
+}

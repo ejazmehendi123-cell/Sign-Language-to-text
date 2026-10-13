@@ -1,0 +1,45 @@
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Large ML data files & raw videos (Zero video policy)
+/data/raw/*
+/data/splits/*
+/data/exports/*
+!/data/.gitkeep
+!/data/raw/.gitkeep
+!/data/splits/.gitkeep
+!/data/exports/.gitkeep
+
+# Logs and runtime outputs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db

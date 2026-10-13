@@ -1,0 +1,157 @@
+{
+  "service_id": "income_certificate",
+  "service_name": {
+    "en": "Income Certificate Service",
+    "hi": "आय प्रमाणपत्र सेवा",
+    "mr": "उत्पन्न प्रमाणपत्र सेवा"
+  },
+  "description": "Counter service flow for income certificate issuance.",
+  "initial_state": "select_purpose",
+  "states": {
+    "select_purpose": {
+      "id": "select_purpose",
+      "prompt": {
+        "en": "Need Income Certificate or Status? (Sign CERTIFICATE or STATUS)",
+        "hi": "आय प्रमाणपत्र चाहिए या स्थिति? (प्रमाणपत्र या स्थिति का संकेत दें)",
+        "mr": "उत्पन्न प्रमाणपत्र हवे की स्थिती? (प्रमाणपत्र किंवा स्थितीची खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Citizen choosing between new income certificate and status inquiry.",
+        "hi": "नागरिक नए आय प्रमाणपत्र और स्थिति जांच में से चुन रहा है।",
+        "mr": "नागरिक नवीन उत्पन्न प्रमाणपत्र आणि स्थिती तपासणी दरम्यान निवडत आहे."
+      },
+      "active_vocab": ["certificate", "status", "help"],
+      "confidence_threshold": 0.65,
+      "min_margin": 0.15,
+      "transitions": {
+        "certificate": "check_income_docs",
+        "status": "status_check",
+        "help": "call_clerk"
+      },
+      "timeout_seconds": 45,
+      "on_timeout": "call_clerk"
+    },
+    "check_income_docs": {
+      "id": "check_income_docs",
+      "prompt": {
+        "en": "Do you have salary slip/ITR and ration card? (Sign YES or NO)",
+        "hi": "क्या आपके पास वेतन पर्ची / आईटीआर और राशन कार्ड है? (हाँ या नहीं)",
+        "mr": "तुमच्याकडे पगार स्लिप / आयटीआर आणि रेशन कार्ड आहे का? (हो किंवा नाही)"
+      },
+      "clerk_hint": {
+        "en": "Checking required income proof documents.",
+        "hi": "आय प्रमाण दस्तावेज़ों की जांच।",
+        "mr": "उत्पन्नाच्या पुराव्यांची तपासणी."
+      },
+      "active_vocab": ["yes", "no", "repeat", "help"],
+      "confidence_threshold": 0.70,
+      "min_margin": 0.20,
+      "transitions": {
+        "yes": "income_fee",
+        "no": "call_clerk",
+        "repeat": "check_income_docs",
+        "help": "call_clerk"
+      },
+      "timeout_seconds": 45,
+      "on_timeout": "call_clerk",
+      "required_documents": [
+        "salary_slip_or_patwari_report",
+        "ration_card",
+        "aadhaar_card"
+      ]
+    },
+    "income_fee": {
+      "id": "income_fee",
+      "prompt": {
+        "en": "Application processing fee is ₹30. Proceed? (Sign YES or NO)",
+        "hi": "आवेदन प्रसंस्करण शुल्क ₹30 है। आगे बढ़ें? (हाँ या नहीं)",
+        "mr": "अर्ज प्रक्रिया शुल्क ₹३० आहे. पुढे जायचे? (हो किंवा नाही)"
+      },
+      "clerk_hint": {
+        "en": "Fee notice ₹30 INR displayed.",
+        "hi": "शुल्क सूचना ₹30 रुपये प्रदर्शित।",
+        "mr": "शुल्क माहिती ₹३० रुपये प्रदर्शित."
+      },
+      "active_vocab": ["yes", "no", "fee"],
+      "confidence_threshold": 0.70,
+      "min_margin": 0.20,
+      "transitions": {
+        "yes": "completed",
+        "no": "call_clerk",
+        "fee": "income_fee"
+      },
+      "timeout_seconds": 35,
+      "on_timeout": "call_clerk",
+      "fee": {
+        "amount_inr": 30,
+        "exemptions": "BPL ration card holders exempt"
+      }
+    },
+    "status_check": {
+      "id": "status_check",
+      "prompt": {
+        "en": "Do you have the application acknowledgment receipt? (Sign YES or NO)",
+        "hi": "क्या आपके पास आवेदन पावती रसीद है? (हाँ या नहीं)",
+        "mr": "तुमच्याकडे अर्ज पावती आहे का? (हो किंवा नाही)"
+      },
+      "clerk_hint": {
+        "en": "Application status inquiry.",
+        "hi": "आवेदन स्थिति जांच।",
+        "mr": "अर्जाची स्थिती तपासणी."
+      },
+      "active_vocab": ["yes", "no", "help"],
+      "confidence_threshold": 0.65,
+      "min_margin": 0.15,
+      "transitions": {
+        "yes": "call_clerk",
+        "no": "call_clerk",
+        "help": "call_clerk"
+      },
+      "timeout_seconds": 30,
+      "on_timeout": "call_clerk"
+    },
+    "call_clerk": {
+      "id": "call_clerk",
+      "prompt": {
+        "en": "Clerk has been notified. Please wait.",
+        "hi": "अधिकारी को सूचित कर दिया गया है। कृपया प्रतीक्षा करें।",
+        "mr": "अधिकाऱ्याला सूचित केले गेले आहे. कृपया प्रतीक्षा करा."
+      },
+      "clerk_hint": {
+        "en": "Clerk assistance summoned.",
+        "hi": "अधिकारी सहायता बुलाई गई।",
+        "mr": "लिपिक मदत बोलावली."
+      },
+      "active_vocab": ["wait", "thank_you"],
+      "confidence_threshold": 0.60,
+      "min_margin": 0.10,
+      "transitions": {
+        "wait": "call_clerk",
+        "thank_you": "completed"
+      },
+      "timeout_seconds": 60,
+      "on_timeout": "completed"
+    },
+    "completed": {
+      "id": "completed",
+      "prompt": {
+        "en": "Service request recorded. Thank you!",
+        "hi": "सेवा अनुरोध दर्ज किया गया। धन्यवाद!",
+        "mr": "सेवा विनंती नोंदवली गेली. धन्यवाद!"
+      },
+      "clerk_hint": {
+        "en": "Interaction complete.",
+        "hi": "संवाद पूर्ण।",
+        "mr": "संवाद पूर्ण झाला."
+      },
+      "active_vocab": ["thank_you"],
+      "confidence_threshold": 0.60,
+      "min_margin": 0.10,
+      "transitions": {
+        "thank_you": "select_purpose"
+      },
+      "timeout_seconds": 15,
+      "on_timeout": "select_purpose"
+    }
+  }
+}

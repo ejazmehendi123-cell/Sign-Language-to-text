@@ -1,0 +1,114 @@
+{
+  "features": {
+    "f1_numbers": {
+      "enabled": false,
+      "description": "Number signing (0-9) for Aadhaar, token, phone, and form numbers",
+      "tier": 1
+    },
+    "f2_fingerspelling": {
+      "enabled": false,
+      "description": "Fingerspelling mode for names with on-screen keyboard fallback",
+      "tier": 1
+    },
+    "f3_multi_sign": {
+      "enabled": false,
+      "description": "Multi-sign phrase composition with reorderable gloss chip row",
+      "tier": 1
+    },
+    "f4_template_sentence_engine": {
+      "enabled": true,
+      "description": "Deterministic rule-based gloss-to-sentence generator (en, hi, mr)",
+      "tier": 1
+    },
+    "f5_pictograms": {
+      "enabled": false,
+      "description": "Pictograms and visual icons for low literacy support",
+      "tier": 1
+    },
+    "f6_clerk_sign_playback": {
+      "enabled": false,
+      "description": "Pre-recorded ISL video clip playback for top clerk responses",
+      "tier": 1
+    },
+    "f7_signer_calibration": {
+      "enabled": false,
+      "description": "20-second optional signer proportion and distance calibration",
+      "tier": 1
+    },
+    "f8_retry_escalation": {
+      "enabled": true,
+      "description": "Automatic escalation after K retries to touch, note, or clerk",
+      "tier": 1
+    },
+    "f9_face_markers": {
+      "enabled": false,
+      "description": "Experimental MediaPipe Face Landmarker for non-manual markers",
+      "tier": 2
+    },
+    "f10_few_shot_personalization": {
+      "enabled": false,
+      "description": "On-device few-shot adaptation on local embeddings",
+      "tier": 2
+    },
+    "f11_active_learning_donation": {
+      "enabled": false,
+      "description": "Opt-in landmark-only dataset donation for confirmed phrases",
+      "tier": 2
+    },
+    "f12_drift_monitor": {
+      "enabled": false,
+      "description": "Clerk dashboard drift and environmental quality monitoring",
+      "tier": 2
+    },
+    "f13_hybrid_confirm_modes": {
+      "enabled": false,
+      "description": "Configurable confirm modes: touch, gesture hold, or spatial dwell",
+      "tier": 2
+    },
+    "f14_conversation_transcript": {
+      "enabled": false,
+      "description": "Two-way scrollable transcript with printable summary QR code",
+      "tier": 2
+    },
+    "f15_queue_token_stub": {
+      "enabled": false,
+      "description": "QueueAdapter interface with mock token dispatch",
+      "tier": 2
+    },
+    "f16_accessibility_audit": {
+      "enabled": true,
+      "description": "WCAG 2.2 AA compliance, left-handed mode, and screen-reader support",
+      "tier": 3
+    },
+    "f17_kiosk_hardening": {
+      "enabled": false,
+      "description": "Fullscreen kiosk lock, watchdog restarter, and offline service worker",
+      "tier": 3
+    },
+    "f18_bias_robustness": {
+      "enabled": true,
+      "description": "Disaggregated metric slice reporting across signers and lighting",
+      "tier": 3
+    },
+    "f19_security_privacy_review": {
+      "enabled": true,
+      "description": "Strict CSP and zero-video automated auditing",
+      "tier": 3
+    },
+    "f20_patent_support_docs": {
+      "enabled": true,
+      "description": "Invention disclosure and claim generator documentation",
+      "tier": 3
+    },
+    "f21_domain_extensibility": {
+      "enabled": false,
+      "description": "Config-driven retargeting to hospital, railway, or banking counters",
+      "tier": 3
+    },
+    "f22_demo_mode": {
+      "enabled": true,
+      "description": "Offline synthetic landmark playback and presenter cheat sheet",
+      "tier": 3
+    }
+  }
+}

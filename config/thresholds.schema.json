@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ISL Kiosk Global Thresholds Schema",
+  "type": "object",
+  "required": [
+    "confidence_default",
+    "min_margin_default",
+    "motion_energy_start_threshold",
+    "motion_energy_stop_threshold",
+    "motion_window_min_frames",
+    "motion_window_max_frames",
+    "idle_timeout_seconds",
+    "confirm_hold_seconds",
+    "smoothing_window_size",
+    "max_retries_before_clerk_escalation",
+    "unknown_energy_threshold"
+  ],
+  "properties": {
+    "confidence_default": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "min_margin_default": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "motion_energy_start_threshold": {
+      "type": "number",
+      "minimum": 0.0
+    },
+    "motion_energy_stop_threshold": {
+      "type": "number",
+      "minimum": 0.0
+    },
+    "motion_window_min_frames": {
+      "type": "integer",
+      "minimum": 5
+    },
+    "motion_window_max_frames": {
+      "type": "integer",
+      "minimum": 15
+    },
+    "idle_timeout_seconds": {
+      "type": "integer",
+      "minimum": 10
+    },
+    "confirm_hold_seconds": {
+      "type": "number",
+      "minimum": 0.5
+    },
+    "smoothing_window_size": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "max_retries_before_clerk_escalation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "unknown_energy_threshold": {
+      "type": "number"
+    }
+  },
+  "additionalProperties": false
+}

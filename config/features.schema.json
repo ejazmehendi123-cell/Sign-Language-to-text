@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ISL Kiosk Feature Flags Schema",
+  "type": "object",
+  "required": ["features"],
+  "properties": {
+    "features": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["enabled", "description", "tier"],
+        "properties": {
+          "enabled": { "type": "boolean" },
+          "description": { "type": "string" },
+          "tier": { "type": "integer", "enum": [1, 2, 3] }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,13 @@
+{
+  "confidence_default": 0.70,
+  "min_margin_default": 0.15,
+  "motion_energy_start_threshold": 0.035,
+  "motion_energy_stop_threshold": 0.015,
+  "motion_window_min_frames": 15,
+  "motion_window_max_frames": 60,
+  "idle_timeout_seconds": 45,
+  "confirm_hold_seconds": 1.2,
+  "smoothing_window_size": 5,
+  "max_retries_before_clerk_escalation": 3,
+  "unknown_energy_threshold": -2.5
+}
