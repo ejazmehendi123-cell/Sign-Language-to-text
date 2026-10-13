@@ -1,0 +1,17 @@
+{
+  "domain_id": "hospital_opd",
+  "name": {
+    "en": "Hospital Outpatient Department (OPD) Desk",
+    "hi": "अस्पताल ओपीडी सहायता पटल",
+    "mr": "रुग्णालय बाह्यरुग्ण विभाग (OPD) कक्ष"
+  },
+  "description": "Counter assistant for patient registration, doctor consultation direction, pharmacy dispensary, and medical billing.",
+  "default_flow": "opd_registration",
+  "available_flows": [
+    "opd_registration",
+    "pharmacy_counter"
+  ],
+  "vocabulary_ref": "config/domains/hospital_opd/vocabulary.json",
+  "thresholds_ref": "config/domains/hospital_opd/thresholds.json",
+  "clerk_role": "Hospital Desk Attendant / Triage Nurse"
+}

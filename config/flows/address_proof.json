@@ -1,0 +1,183 @@
+{
+  "service_id": "address_proof",
+  "service_name": {
+    "en": "Address Proof / Domicile Service",
+    "hi": "निवास प्रमाण / पता प्रमाण सेवा",
+    "mr": "रहिवासी / पत्ता दाखला सेवा"
+  },
+  "description": "Counter service flow for certificate of residence, address proof verification, or domicile status.",
+  "initial_state": "select_service_type",
+  "states": {
+    "select_service_type": {
+      "id": "select_service_type",
+      "prompt": {
+        "en": "What do you need regarding address proof? (Sign CERTIFICATE, FORM, or STATUS)",
+        "hi": "पता प्रमाण के संबंध में क्या चाहिए? (प्रमाणपत्र, फॉर्म, या स्थिति का संकेत दें)",
+        "mr": "पत्ता दाखल्याबद्दल काय हवे आहे? (प्रमाणपत्र, फॉर्म, किंवा स्थितीची खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Waiting for citizen selection: Domicile certificate, address update form, or status verification.",
+        "hi": "नागरिक चयन की प्रतीक्षा: अधिवास प्रमाणपत्र, पता अद्यतन प्रपत्र, या स्थिति सत्यापन।",
+        "mr": "नागरिक निवडीची प्रतीक्षा: अधिवास दाखला, पत्ता बदल अर्ज, किंवा स्थिती तपासणी."
+      },
+      "active_vocab": ["certificate", "form", "status", "help"],
+      "confidence_threshold": 0.65,
+      "min_margin": 0.15,
+      "transitions": {
+        "certificate": "verify_residence_proof",
+        "form": "verify_residence_proof",
+        "status": "status_check",
+        "help": "call_clerk"
+      },
+      "timeout_seconds": 45,
+      "on_timeout": "call_clerk"
+    },
+    "verify_residence_proof": {
+      "id": "verify_residence_proof",
+      "prompt": {
+        "en": "Do you have electricity bill or registered rent agreement older than 3 years? (Sign YES or NO)",
+        "hi": "क्या आपके पास 3 वर्ष से अधिक पुराना बिजली बिल या किराया अनुबंध है? (हाँ या नहीं का संकेत दें)",
+        "mr": "तुमच्याकडे ३ वर्षांपूर्वीचे वीज बिल किंवा भाडे करार आहे का? (हो किंवा नाही खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Verify minimum 3-year local continuous residency evidence (electricity, tax receipt, voter card).",
+        "hi": "न्यूनतम 3 वर्ष के स्थानीय निवास साक्ष्य (बिजली, कर रसीद, मतदाता पहचान) की जांच करें।",
+        "mr": "किमान ३ वर्षांचा स्थानिक वास्तव्याचा पुरावा (वीज बिल, कर पावती, मतदार ओळखपत्र) तपासा."
+      },
+      "active_vocab": ["yes", "no", "repeat", "wait"],
+      "confidence_threshold": 0.70,
+      "min_margin": 0.20,
+      "transitions": {
+        "yes": "fee_payment",
+        "no": "missing_doc_guidance",
+        "repeat": "verify_residence_proof",
+        "wait": "verify_residence_proof"
+      },
+      "timeout_seconds": 45,
+      "on_timeout": "call_clerk",
+      "required_documents": [
+        "electricity_bill_or_tax_receipt",
+        "voter_id_or_passport",
+        "school_leaving_certificate"
+      ]
+    },
+    "missing_doc_guidance": {
+      "id": "missing_doc_guidance",
+      "prompt": {
+        "en": "Continuous residency proof needed. Show existing documents to clerk? (Sign YES or NO)",
+        "hi": "निरंतर निवास प्रमाण आवश्यक है। क्या कर्मचारी को उपलब्ध दस्तावेज़ दिखाएंगे? (हाँ या नहीं का संकेत दें)",
+        "mr": "सलग वास्तव्याचा पुरावा आवश्यक आहे. उपलब्ध कागदपत्रे कर्मचाऱ्याला दाखवणार का? (हो किंवा नाही खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Review alternative proof options (telecom bill, ration card, village officer affidavit).",
+        "hi": "वैकल्पिक प्रमाण विकल्पों (दूरसंचार बिल, राशन कार्ड, पटवारी प्रमाण) की समीक्षा करें।",
+        "mr": "पर्यायी पुरावे (दूरध्वनी बिल, शिधापत्रिका, तलाठी दाखला) तपासा."
+      },
+      "active_vocab": ["yes", "no", "help"],
+      "confidence_threshold": 0.65,
+      "min_margin": 0.15,
+      "transitions": {
+        "yes": "call_clerk",
+        "no": "completed",
+        "help": "call_clerk"
+      },
+      "timeout_seconds": 45,
+      "on_timeout": "completed"
+    },
+    "fee_payment": {
+      "id": "fee_payment",
+      "prompt": {
+        "en": "Certificate fee is Rs. 35. Pay at counter now? (Sign YES or NO)",
+        "hi": "प्रमाणपत्र शुल्क 35 रुपये है। क्या अभी जमा करेंगे? (हाँ या नहीं का संकेत दें)",
+        "mr": "दाखला शुल्क ३५ रुपये आहे. आता काउंटरवर भरणार का? (हो किंवा नाही खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Collect Rs. 35 government treasury processing fee and print challan slip.",
+        "hi": "35 रुपये सरकारी चालान शुल्क प्राप्त करें और रसीद प्रिंट करें।",
+        "mr": "३५ रुपये सरकारी चलन शुल्क जमा करून पावती प्रिंट करा."
+      },
+      "active_vocab": ["yes", "no", "fee", "wait"],
+      "confidence_threshold": 0.65,
+      "min_margin": 0.15,
+      "transitions": {
+        "yes": "completed",
+        "no": "completed",
+        "fee": "fee_payment",
+        "wait": "fee_payment"
+      },
+      "timeout_seconds": 45,
+      "on_timeout": "completed",
+      "fee": {
+        "amount_inr": 35,
+        "exemptions": "Students eligible for fee reimbursement with institution ID"
+      }
+    },
+    "status_check": {
+      "id": "status_check",
+      "prompt": {
+        "en": "Show your application reference slip to the clerk. (Sign WAIT or THANK YOU)",
+        "hi": "कृपया कर्मचारी को अपना आवेदन संदर्भ पर्ची दिखाएँ। (प्रतीक्षा या धन्यवाद का संकेत दें)",
+        "mr": "कृपया कर्मचाऱ्याला अर्ज संदर्भ पावती दाखवा. (प्रतीक्षा किंवा धन्यवाद खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Check domicile status on the revenue departmental portal using receipt barcode.",
+        "hi": "रसीद बारकोड द्वारा राजस्व विभागीय पोर्टल पर स्थिति की जांच करें।",
+        "mr": "बारकोड स्कॅन करून महसूल पोर्टलवर दाखल्याची स्थिती तपासा."
+      },
+      "active_vocab": ["wait", "thank_you", "help"],
+      "confidence_threshold": 0.65,
+      "min_margin": 0.15,
+      "transitions": {
+        "wait": "status_check",
+        "thank_you": "completed",
+        "help": "call_clerk"
+      },
+      "timeout_seconds": 60,
+      "on_timeout": "completed"
+    },
+    "call_clerk": {
+      "id": "call_clerk",
+      "prompt": {
+        "en": "The clerk is assisting you in person. Please wait a moment.",
+        "hi": "कर्मचारी व्यक्तिगत रूप से सहायता कर रहे हैं। कृपया प्रतीक्षा करें।",
+        "mr": "कर्मचारी प्रत्यक्ष मदत करत आहेत. कृपया थोडी प्रतीक्षा करा."
+      },
+      "clerk_hint": {
+        "en": "Citizen signaled for personalized clerk support.",
+        "hi": "नागरिक ने व्यक्तिगत कर्मचारी सहायता मांगी है।",
+        "mr": "नागरिकाने कर्मचारी मदतीचा संकेत दिला आहे."
+      },
+      "active_vocab": ["wait", "thank_you", "slow"],
+      "confidence_threshold": 0.60,
+      "min_margin": 0.10,
+      "transitions": {
+        "wait": "call_clerk",
+        "thank_you": "completed",
+        "slow": "call_clerk"
+      },
+      "timeout_seconds": 60,
+      "on_timeout": "completed"
+    },
+    "completed": {
+      "id": "completed",
+      "prompt": {
+        "en": "Process finished. Thank you! (Sign THANK YOU to restart)",
+        "hi": "प्रक्रिया पूरी हुई। धन्यवाद! (पुनः आरंभ करने हेतु धन्यवाद का संकेत दें)",
+        "mr": "प्रक्रिया पूर्ण झाली. धन्यवाद! (पुन्हा सुरू करण्यासाठी धन्यवाद खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Provide stamped domicile certificate or formal acknowledgment receipt.",
+        "hi": "मुद्रित अधिवास प्रमाणपत्र अथवा पावती नागरिक को सौंपें।",
+        "mr": "शिक्का असलेला रहिवासी दाखला किंवा पावती द्या."
+      },
+      "active_vocab": ["thank_you"],
+      "confidence_threshold": 0.60,
+      "min_margin": 0.10,
+      "transitions": {
+        "thank_you": "select_service_type"
+      },
+      "timeout_seconds": 30,
+      "on_timeout": "select_service_type"
+    }
+  }
+}

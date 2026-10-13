@@ -11,10 +11,13 @@ lint:
 typecheck:
 	cd web && npm run typecheck
 
-test: validate-config test-tools test-web
+test: validate-config test-tools test-ml test-web
 
 test-tools:
-	pytest tools/ -v
+	PYTHONPATH=. pytest tools/ -v
+
+test-ml:
+	PYTHONPATH=. pytest tests/ -v
 
 test-web:
 	cd web && npm run test
@@ -24,6 +27,15 @@ validate-config:
 
 validate-data:
 	python3 tools/validate_data.py --dir data/raw
+
+train:
+	PYTHONPATH=. python3 ml/train.py
+
+evaluate:
+	PYTHONPATH=. python3 ml/evaluate.py
+
+benchmark:
+	PYTHONPATH=. python3 tools/benchmark_targets.py
 
 dev:
 	cd web && npm run dev

@@ -1,0 +1,208 @@
+{
+  "service_id": "ration_card",
+  "service_name": {
+    "en": "Ration Card Service",
+    "hi": "राशन कार्ड सेवा",
+    "mr": "शिधापत्रिका सेवा"
+  },
+  "description": "Counter service flow for new ration card, modification, or food grains inquiry.",
+  "initial_state": "select_service_type",
+  "states": {
+    "select_service_type": {
+      "id": "select_service_type",
+      "prompt": {
+        "en": "What do you need for ration card? (Sign FORM, DOCUMENT, or STATUS)",
+        "hi": "राशन कार्ड के लिए क्या चाहिए? (फॉर्म, दस्तावेज़, या स्थिति का संकेत दें)",
+        "mr": "शिधापत्रिकेसाठी काय हवे आहे? (फॉर्म, कागदपत्र, किंवा स्थितीची खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Waiting for citizen selection: New application form, document verification, or status inquiry.",
+        "hi": "नागरिक चयन की प्रतीक्षा: नया आवेदन फॉर्म, दस्तावेज़ सत्यापन, या स्थिति जांच।",
+        "mr": "नागरिक निवडीची प्रतीक्षा: नवीन अर्ज, कागदपत्र पडताळणी, किंवा स्थिती तपासणी."
+      },
+      "active_vocab": ["form", "document", "status", "help"],
+      "confidence_threshold": 0.65,
+      "min_margin": 0.15,
+      "transitions": {
+        "form": "form_selection",
+        "document": "verify_family_docs",
+        "status": "status_check",
+        "help": "call_clerk"
+      },
+      "timeout_seconds": 45,
+      "on_timeout": "call_clerk"
+    },
+    "form_selection": {
+      "id": "form_selection",
+      "prompt": {
+        "en": "Do you need a new card or name change? (Sign NEED or NAME)",
+        "hi": "क्या आपको नया कार्ड चाहिए या नाम जोड़ना है? (चाहिए या नाम का संकेत दें)",
+        "mr": "नवीन कार्ड हवे आहे की नाव जोडायचे आहे? (हवे किंवा नाव खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Citizen choosing between new card registration or family member addition.",
+        "hi": "नागरिक नए कार्ड या परिवार सदस्य जोड़ने का चयन कर रहा है।",
+        "mr": "नागरिक नवीन कार्ड किंवा कुटुंब सदस्य जोडणे निवडत आहे."
+      },
+      "active_vocab": ["need", "name", "repeat", "help"],
+      "confidence_threshold": 0.65,
+      "min_margin": 0.15,
+      "transitions": {
+        "need": "verify_family_docs",
+        "name": "verify_family_docs",
+        "repeat": "form_selection",
+        "help": "call_clerk"
+      },
+      "timeout_seconds": 40,
+      "on_timeout": "call_clerk"
+    },
+    "verify_family_docs": {
+      "id": "verify_family_docs",
+      "prompt": {
+        "en": "Do you have Aadhaar cards of all family members and income proof? (Sign YES or NO)",
+        "hi": "क्या सभी सदस्यों का आधार कार्ड और आय प्रमाण है? (हाँ या नहीं का संकेत दें)",
+        "mr": "सर्व कुटुंबातील सदस्यांचे आधार कार्ड आणि उत्पन्न दाखला आहे का? (हो किंवा नाही खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Verify Aadhaar cards for all household members, electricity bill, and income slip.",
+        "hi": "सभी सदस्यों के आधार कार्ड, बिजली बिल और आय प्रमाण की जांच करें।",
+        "mr": "सर्व सदस्यांचे आधार कार्ड, वीज बिल आणि उत्पन्न दाखला तपासा."
+      },
+      "active_vocab": ["yes", "no", "repeat", "wait"],
+      "confidence_threshold": 0.70,
+      "min_margin": 0.20,
+      "transitions": {
+        "yes": "fee_payment",
+        "no": "missing_doc_guidance",
+        "repeat": "verify_family_docs",
+        "wait": "verify_family_docs"
+      },
+      "timeout_seconds": 45,
+      "on_timeout": "call_clerk",
+      "required_documents": [
+        "all_members_aadhaar",
+        "address_proof",
+        "income_certificate",
+        "gas_cylinder_passbook"
+      ]
+    },
+    "missing_doc_guidance": {
+      "id": "missing_doc_guidance",
+      "prompt": {
+        "en": "Please attach all family Aadhaar copies and address proof. Need assistance? (Sign HELP or THANK YOU)",
+        "hi": "कृपया सभी आधार प्रतियां और पता प्रमाण संलग्न करें। सहायता चाहिए? (मदद या धन्यवाद का संकेत दें)",
+        "mr": "कृपया सर्व आधार प्रती आणि पत्ता पुरावा जोडा. मदत हवी आहे का? (मदत किंवा धन्यवाद खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Explain missing requirements and direct citizen to the nearest documentation help desk.",
+        "hi": "अधूरी आवश्यकताएं समझाएं और निकटतम दस्तावेज़ सहायता केंद्र भेजें।",
+        "mr": "अपूर्ण कागदपत्रे समजावून सांगा आणि जवळच्या मदत केंद्राकडे निर्देशित करा."
+      },
+      "active_vocab": ["help", "thank_you", "wait"],
+      "confidence_threshold": 0.65,
+      "min_margin": 0.15,
+      "transitions": {
+        "help": "call_clerk",
+        "thank_you": "completed",
+        "wait": "missing_doc_guidance"
+      },
+      "timeout_seconds": 45,
+      "on_timeout": "completed"
+    },
+    "fee_payment": {
+      "id": "fee_payment",
+      "prompt": {
+        "en": "Application processing fee is Rs. 20 (free for BPL). Pay now? (Sign YES or NO)",
+        "hi": "आवेदन शुल्क 20 रुपये है (बीपीएल हेतु निःशुल्क)। अभी जमा करेंगे? (हाँ या नहीं का संकेत दें)",
+        "mr": "अर्ज शुल्क २० रुपये आहे (दारिद्र्यरेषेखालील मोफत). आता भरणार का? (हो किंवा नाही खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Collect Rs. 20 fee or check BPL ration waiver category.",
+        "hi": "20 रुपये शुल्क प्राप्त करें अथवा बीपीएल छूट सत्यापित करें।",
+        "mr": "२० रुपये शुल्क घ्या किंवा बीपीएल सवलत तपासा."
+      },
+      "active_vocab": ["yes", "no", "fee", "wait"],
+      "confidence_threshold": 0.65,
+      "min_margin": 0.15,
+      "transitions": {
+        "yes": "completed",
+        "no": "completed",
+        "fee": "fee_payment",
+        "wait": "fee_payment"
+      },
+      "timeout_seconds": 45,
+      "on_timeout": "completed",
+      "fee": {
+        "amount_inr": 20,
+        "exemptions": "BPL ration cardholders exempt"
+      }
+    },
+    "status_check": {
+      "id": "status_check",
+      "prompt": {
+        "en": "Please show application token number to clerk. (Sign WAIT or THANK YOU)",
+        "hi": "कृपया कर्मचारी को आवेदन टोकन संख्या दिखाएँ। (प्रतीक्षा या धन्यवाद का संकेत दें)",
+        "mr": "कृपया कर्मचाऱ्याला अर्ज टोकन क्रमांक दाखवा. (प्रतीक्षा किंवा धन्यवाद खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Lookup ration card issuance database via acknowledgment receipt number.",
+        "hi": "रसीद पावती संख्या द्वारा राशन कार्ड डेटाबेस खोजें।",
+        "mr": "पावती क्रमांकावरून शिधापत्रिका डेटाबेस शोधा."
+      },
+      "active_vocab": ["wait", "thank_you", "help"],
+      "confidence_threshold": 0.65,
+      "min_margin": 0.15,
+      "transitions": {
+        "wait": "status_check",
+        "thank_you": "completed",
+        "help": "call_clerk"
+      },
+      "timeout_seconds": 60,
+      "on_timeout": "completed"
+    },
+    "call_clerk": {
+      "id": "call_clerk",
+      "prompt": {
+        "en": "Counter clerk is assisting you directly. Please wait a moment.",
+        "hi": "काउंटर कर्मचारी आपकी सीधी सहायता कर रहे हैं। कृपया प्रतीक्षा करें।",
+        "mr": "काउंटर कर्मचारी तुम्हाला थेट मदत करत आहेत. कृपया थोडी प्रतीक्षा करा."
+      },
+      "clerk_hint": {
+        "en": "Citizen requested in-person clerk intervention.",
+        "hi": "नागरिक ने व्यक्तिगत कर्मचारी सहायता का अनुरोध किया।",
+        "mr": "नागरिकाने वैयक्तिक कर्मचारी मदतीची विनंती केली."
+      },
+      "active_vocab": ["wait", "thank_you", "slow"],
+      "confidence_threshold": 0.60,
+      "min_margin": 0.10,
+      "transitions": {
+        "wait": "call_clerk",
+        "thank_you": "completed",
+        "slow": "call_clerk"
+      },
+      "timeout_seconds": 60,
+      "on_timeout": "completed"
+    },
+    "completed": {
+      "id": "completed",
+      "prompt": {
+        "en": "Service request completed. Thank you! (Sign THANK YOU to finish)",
+        "hi": "सेवा अनुरोध पूरा हुआ। धन्यवाद! (समाप्त करने हेतु धन्यवाद का संकेत दें)",
+        "mr": "सेवा विनंती पूर्ण झाली. धन्यवाद! (पूर्ण करण्यासाठी धन्यवाद खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Transaction closed. Hand over receipt or acknowledgment slip.",
+        "hi": "कार्य पूर्ण। पावती या रसीद नागरिक को सौंपें।",
+        "mr": "काम पूर्ण झाले. पोचपावती नागरिकाला द्या."
+      },
+      "active_vocab": ["thank_you"],
+      "confidence_threshold": 0.60,
+      "min_margin": 0.10,
+      "transitions": {
+        "thank_you": "select_service_type"
+      },
+      "timeout_seconds": 30,
+      "on_timeout": "select_service_type"
+    }
+  }
+}

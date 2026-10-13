@@ -1,0 +1,182 @@
+{
+  "service_id": "opd_registration",
+  "service_name": {
+    "en": "OPD Patient Registration Desk",
+    "hi": "ओपीडी रोगी पंजीकरण पटल",
+    "mr": "बाह्यरुग्ण नोंदणी कक्ष"
+  },
+  "description": "Hospital counter service flow for patient registration, token generation, and triage direction.",
+  "initial_state": "select_service_type",
+  "states": {
+    "select_service_type": {
+      "id": "select_service_type",
+      "prompt": {
+        "en": "Welcome to Hospital OPD. What do you need? (Sign DOCTOR, FORM, or EMERGENCY)",
+        "hi": "अस्पताल ओपीडी में स्वागत है। क्या चाहिए? (डॉक्टर, फॉर्म, या आपातकालीन का संकेत दें)",
+        "mr": "रुग्णालय ओपीडीमध्ये आपले स्वागत आहे. काय हवे आहे? (डॉक्टर, फॉर्म, किंवा तातडीचे खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Triage patient: Doctor consultation registration, OPD card form, or immediate emergency room route.",
+        "hi": "मरीज का प्राथमिक वर्गीकरण: डॉक्टर परामर्श पंजीकरण, पर्चा प्रपत्र, अथवा आपातकालीन कक्ष।",
+        "mr": "रुग्णाची वर्गवारी: डॉक्टर तपासणी नोंदणी, केस पेपर, किंवा तातडीच्या कक्षाकडे पाठवणे."
+      },
+      "active_vocab": ["doctor", "form", "emergency", "help"],
+      "confidence_threshold": 0.65,
+      "min_margin": 0.15,
+      "transitions": {
+        "doctor": "patient_details",
+        "form": "patient_details",
+        "emergency": "emergency_alert",
+        "help": "call_clerk"
+      },
+      "timeout_seconds": 30,
+      "on_timeout": "call_clerk"
+    },
+    "emergency_alert": {
+      "id": "emergency_alert",
+      "prompt": {
+        "en": "EMERGENCY: Please proceed directly to Room 1 (Casualty/Emergency). Nurse alerted!",
+        "hi": "आपातकाल: कृपया तुरंत कमरा नंबर 1 (आपातकालीन कक्ष) जाएँ। नर्स को सूचित किया गया!",
+        "mr": "तातडीचे: कृपया लगेच खोली क्र. १ (कॅज्युअल्टी) येथे जा. परिचारिकेला कळवले आहे!"
+      },
+      "clerk_hint": {
+        "en": "CRITICAL: Patient indicated emergency. Call orderly and direct to casualty immediately.",
+        "hi": "गंभीर: मरीज ने आपातकाल का संकेत दिया। वार्ड ब्वॉय बुलाएँ और कैजुअल्टी भेजें।",
+        "mr": "तातडीचे: रुग्णाने आणीबाणीचा संकेत दिला. तातडीने मदतनीसाला बोलवा."
+      },
+      "active_vocab": ["wait", "thank_you", "help"],
+      "confidence_threshold": 0.55,
+      "min_margin": 0.10,
+      "transitions": {
+        "wait": "emergency_alert",
+        "thank_you": "completed",
+        "help": "call_clerk"
+      },
+      "timeout_seconds": 30,
+      "on_timeout": "call_clerk"
+    },
+    "patient_details": {
+      "id": "patient_details",
+      "prompt": {
+        "en": "Is this a new patient or follow-up visit? (Sign NAME for new or STATUS for follow-up)",
+        "hi": "क्या नया मरीज है या दोबारा दिखाने आए हैं? (नया हेतु नाम अथवा दोबारा हेतु स्थिति का संकेत दें)",
+        "mr": "नवीन रुग्ण आहे की पुन्हा तपासणी आहे? (नवीनसाठी नाव किंवा पुन्हा तपासणीसाठी स्थिती खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "New patient needs OPD registration booklet; follow-up patient has previous MRN hospital card number.",
+        "hi": "नए मरीज हेतु ओपीडी बुकलेट आवश्यक; पुराने मरीज का अस्पताल कार्ड नंबर प्राप्त करें।",
+        "mr": "नवीन रुग्णासाठी नोंदणी वही; जुन्या रुग्णासाठी मागील केस पेपर नंबर घ्या."
+      },
+      "active_vocab": ["name", "status", "repeat", "help"],
+      "confidence_threshold": 0.65,
+      "min_margin": 0.15,
+      "transitions": {
+        "name": "fee_payment",
+        "status": "fee_payment",
+        "repeat": "patient_details",
+        "help": "call_clerk"
+      },
+      "timeout_seconds": 40,
+      "on_timeout": "call_clerk",
+      "required_documents": [
+        "aadhaar_card_or_abha_id",
+        "previous_prescription_if_any"
+      ]
+    },
+    "fee_payment": {
+      "id": "fee_payment",
+      "prompt": {
+        "en": "OPD registration fee is Rs. 10 (free for Ayushman Bharat PMJAY). Pay now? (Sign YES or NO)",
+        "hi": "ओपीडी पर्ची शुल्क 10 रुपये है (आयुष्मान भारत कार्ड धारकों हेतु निःशुल्क)। जमा करेंगे? (हाँ / नहीं)",
+        "mr": "ओपीडी नोंदणी फी १० रुपये आहे (आयुष्मान भारत कार्डधारकांना मोफत). भरणार का? (हो / नाही)"
+      },
+      "clerk_hint": {
+        "en": "Collect Rs. 10 OPD registration fee or scan ABHA / PMJAY Ayushman Bharat card.",
+        "hi": "10 रुपये ओपीडी शुल्क प्राप्त करें या आयुष्मान भारत कार्ड स्कैन करें।",
+        "mr": "१० रुपये ओपीडी फी घ्या किंवा आयुष्मान भारत कार्ड स्कॅन करा."
+      },
+      "active_vocab": ["yes", "no", "fee", "wait"],
+      "confidence_threshold": 0.65,
+      "min_margin": 0.15,
+      "transitions": {
+        "yes": "doctor_direction",
+        "no": "doctor_direction",
+        "fee": "fee_payment",
+        "wait": "fee_payment"
+      },
+      "timeout_seconds": 40,
+      "on_timeout": "doctor_direction",
+      "fee": {
+        "amount_inr": 10,
+        "exemptions": "PM-JAY Ayushman Card & Senior Citizens over 75 free"
+      }
+    },
+    "doctor_direction": {
+      "id": "doctor_direction",
+      "prompt": {
+        "en": "Token #42 assigned. Please wait outside Doctor Consultation Room 4. (Sign WAIT or THANK YOU)",
+        "hi": "टोकन संख्या 42 जारी। कृपया डॉक्टर परामर्श कक्ष 4 के बाहर प्रतीक्षा करें। (प्रतीक्षा या धन्यवाद का संकेत दें)",
+        "mr": "टोकन क्र. ४२ जारी. कृपया डॉक्टर तपासणी कक्ष क्र. ४ बाहेर थांबा. (प्रतीक्षा किंवा धन्यवाद खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Print token slip and point toward General Medicine Wing Room 4.",
+        "hi": "टोकन पर्ची प्रिंट करें और मेडिसिन विंग कमरा 4 की दिशा दिखाएँ।",
+        "mr": "टोकन पावती प्रिंट करा आणि खोली क्र. ४ कडे जाण्यास सांगा."
+      },
+      "active_vocab": ["wait", "thank_you", "where"],
+      "confidence_threshold": 0.60,
+      "min_margin": 0.10,
+      "transitions": {
+        "wait": "doctor_direction",
+        "thank_you": "completed",
+        "where": "doctor_direction"
+      },
+      "timeout_seconds": 45,
+      "on_timeout": "completed"
+    },
+    "call_clerk": {
+      "id": "call_clerk",
+      "prompt": {
+        "en": "Hospital staff is assisting you directly. Please wait.",
+        "hi": "अस्पताल कर्मी आपकी सीधी सहायता कर रहे हैं। कृपया प्रतीक्षा करें।",
+        "mr": "रुग्णालय कर्मचारी थेट मदत करत आहेत. कृपया थोडी प्रतीक्षा करा."
+      },
+      "clerk_hint": {
+        "en": "Patient needs in-person staff assistance or wheelchair escort.",
+        "hi": "मरीज को व्यक्तिगत स्टाफ सहायता अथवा व्हीलचेयर की आवश्यकता है।",
+        "mr": "रुग्णाला प्रत्यक्ष मदतीची किंवा व्हीलचेअरची गरज आहे."
+      },
+      "active_vocab": ["wait", "thank_you", "slow"],
+      "confidence_threshold": 0.60,
+      "min_margin": 0.10,
+      "transitions": {
+        "wait": "call_clerk",
+        "thank_you": "completed",
+        "slow": "call_clerk"
+      },
+      "timeout_seconds": 60,
+      "on_timeout": "completed"
+    },
+    "completed": {
+      "id": "completed",
+      "prompt": {
+        "en": "Registration completed. Wish you good health! (Sign THANK YOU to restart)",
+        "hi": "पंजीकरण पूर्ण हुआ। आपके उत्तम स्वास्थ्य की कामना! (पुनः आरंभ हेतु धन्यवाद का संकेत दें)",
+        "mr": "नोंदणी पूर्ण झाली. लवकर बरे व्हा! (पुन्हा सुरू करण्यासाठी धन्यवाद खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Hand over OPD registration booklet and token slip.",
+        "hi": "ओपीडी पर्चा और टोकन नागरिक को सौंपें।",
+        "mr": "केस पेपर आणि टोकन रुग्णाला द्या."
+      },
+      "active_vocab": ["thank_you"],
+      "confidence_threshold": 0.60,
+      "min_margin": 0.10,
+      "transitions": {
+        "thank_you": "select_service_type"
+      },
+      "timeout_seconds": 30,
+      "on_timeout": "select_service_type"
+    }
+  }
+}

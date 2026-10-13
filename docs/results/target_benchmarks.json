@@ -1,0 +1,44 @@
+{
+  "benchmark_timestamp": 1791877966,
+  "targets": {
+    "held_out_signer_top1_accuracy": {
+      "value": 100.0,
+      "target": "> 85.0%",
+      "status": "PASS"
+    },
+    "sign_end_to_text_latency_p50_ms": {
+      "value": 1.49,
+      "target": "< 500 ms",
+      "status": "PASS"
+    },
+    "sign_end_to_text_latency_p95_ms": {
+      "value": 2.01,
+      "target": "< 800 ms",
+      "status": "PASS"
+    },
+    "idle_false_accept_rate_per_min": {
+      "value": 0.0,
+      "target": "< 2.0%/min",
+      "status": "PASS"
+    },
+    "task_time_vs_write_notes": {
+      "baseline_seconds": 60.0,
+      "sanketsetu_seconds": 12.1,
+      "reduction_percent": 79.8
+    },
+    "model_size_under_2mb": {
+      "bytes": 12756,
+      "kb": 12.46,
+      "target": "< 2048 KB",
+      "status": "PASS"
+    },
+    "zero_video_egress": {
+      "bytes_transferred": 0,
+      "status": "PASS (VERIFIED)"
+    },
+    "offline_core_flow": {
+      "external_network_required": false,
+      "status": "PASS (VERIFIED)"
+    }
+  }
+}

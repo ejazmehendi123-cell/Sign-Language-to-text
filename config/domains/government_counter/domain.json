@@ -1,0 +1,20 @@
+{
+  "domain_id": "government_counter",
+  "name": {
+    "en": "Government Citizen Service Kiosk (MahaSeva / E-Seva Kendra)",
+    "hi": "सरकारी नागरिक सेवा केंद्र",
+    "mr": "शासकीय नागरिक सेवा केंद्र"
+  },
+  "description": "Standard citizen counter service for certificates, ration cards, domicile proofs, and revenue status inquiries.",
+  "default_flow": "birth_certificate",
+  "available_flows": [
+    "birth_certificate",
+    "income_certificate",
+    "ration_card",
+    "address_proof",
+    "application_status"
+  ],
+  "vocabulary_ref": "config/vocabulary.json",
+  "thresholds_ref": "config/thresholds.json",
+  "clerk_role": "Counter Assistant / Officer"
+}

@@ -1,0 +1,155 @@
+{
+  "service_id": "application_status",
+  "service_name": {
+    "en": "Application Status Tracking",
+    "hi": "आवेदन स्थिति ट्रैकिंग",
+    "mr": "अर्ज स्थिती तपासणी"
+  },
+  "description": "Counter service flow for tracking the status of any previously submitted government certificate or application.",
+  "initial_state": "select_service_type",
+  "states": {
+    "select_service_type": {
+      "id": "select_service_type",
+      "prompt": {
+        "en": "Which application status do you want to check? (Sign BIRTH, INCOME, or CERTIFICATE)",
+        "hi": "किस आवेदन की स्थिति देखना चाहते हैं? (जन्म, आय, या प्रमाणपत्र का संकेत दें)",
+        "mr": "कोणत्या अर्जाची स्थिती तपासायची आहे? (जन्म, उत्पन्न, किंवा दाखला खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Citizen identifying which application department to query in the central tracking portal.",
+        "hi": "नागरिक केंद्रीय ट्रैकिंग पोर्टल में संबंधित विभाग का चयन कर रहा है।",
+        "mr": "नागरिक संबंधित विभागाच्या अर्जाची निवड करत आहे."
+      },
+      "active_vocab": ["birth", "income", "certificate", "help"],
+      "confidence_threshold": 0.65,
+      "min_margin": 0.15,
+      "transitions": {
+        "birth": "show_receipt",
+        "income": "show_receipt",
+        "certificate": "show_receipt",
+        "help": "call_clerk"
+      },
+      "timeout_seconds": 45,
+      "on_timeout": "call_clerk"
+    },
+    "show_receipt": {
+      "id": "show_receipt",
+      "prompt": {
+        "en": "Do you have the acknowledgment receipt slip with tracking number? (Sign YES or NO)",
+        "hi": "क्या आपके पास पावती रसीद है? (हाँ या नहीं का संकेत दें)",
+        "mr": "तुमच्याकडे पोचपावती किंवा अर्ज क्रमांक आहे का? (हो किंवा नाही खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Ask citizen to present acknowledgment receipt or provide registered mobile number.",
+        "hi": "नागरिक से पावती रसीद या पंजीकृत मोबाइल नंबर प्रस्तुत करने को कहें।",
+        "mr": "नागरिकाला पोचपावती किंवा नोंदणीकृत मोबाईल क्रमांक विचारून घ्या."
+      },
+      "active_vocab": ["yes", "no", "repeat", "wait"],
+      "confidence_threshold": 0.70,
+      "min_margin": 0.20,
+      "transitions": {
+        "yes": "clerk_querying",
+        "no": "search_by_name",
+        "repeat": "show_receipt",
+        "wait": "show_receipt"
+      },
+      "timeout_seconds": 45,
+      "on_timeout": "call_clerk",
+      "required_documents": [
+        "acknowledgment_slip",
+        "aadhaar_card"
+      ]
+    },
+    "search_by_name": {
+      "id": "search_by_name",
+      "prompt": {
+        "en": "Clerk will search by citizen name and date of birth. Show ID card? (Sign YES or NO)",
+        "hi": "कर्मचारी नाम और जन्मतिथि से खोजेंगे। क्या पहचान पत्र दिखाएंगे? (हाँ या नहीं का संकेत दें)",
+        "mr": "कर्मचारी नाव आणि जन्मतारखेनुसार शोधतील. ओळखपत्र दाखवणार का? (हो किंवा नाही खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Execute applicant database lookup by citizen full name and date of birth.",
+        "hi": "नागरिक के पूरे नाम और जन्मतिथि से डेटाबेस में खोज करें।",
+        "mr": "नागरिकाचे पूर्ण नाव आणि जन्मतारखेवरून डेटाबेस तपासा."
+      },
+      "active_vocab": ["yes", "no", "name", "wait"],
+      "confidence_threshold": 0.65,
+      "min_margin": 0.15,
+      "transitions": {
+        "yes": "clerk_querying",
+        "no": "call_clerk",
+        "name": "clerk_querying",
+        "wait": "clerk_querying"
+      },
+      "timeout_seconds": 45,
+      "on_timeout": "call_clerk"
+    },
+    "clerk_querying": {
+      "id": "clerk_querying",
+      "prompt": {
+        "en": "Checking status in database. Please wait a moment. (Sign WAIT or STATUS)",
+        "hi": "डेटाबेस में जांच की जा रही है। कृपया प्रतीक्षा करें। (प्रतीक्षा या स्थिति का संकेत दें)",
+        "mr": "डेटाबेसमध्ये तपासणी सुरू आहे. कृपया थोडी प्रतीक्षा करा. (प्रतीक्षा किंवा स्थिती खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Database query in progress. Inform citizen whether file is Approved, Pending Officer Verification, or Ready for Collection.",
+        "hi": "जांच प्रगति पर है। नागरिक को बताएं: स्वीकृत, सत्यापन लंबित, या वितरण हेतु तैयार।",
+        "mr": "तपासणी सुरू आहे. नागरिकाला सांगा: मंजूर, पडताळणी प्रलंबित, किंवा वितरणासाठी तयार."
+      },
+      "active_vocab": ["wait", "status", "thank_you"],
+      "confidence_threshold": 0.65,
+      "min_margin": 0.15,
+      "transitions": {
+        "wait": "clerk_querying",
+        "status": "clerk_querying",
+        "thank_you": "completed"
+      },
+      "timeout_seconds": 60,
+      "on_timeout": "completed"
+    },
+    "call_clerk": {
+      "id": "call_clerk",
+      "prompt": {
+        "en": "Clerk is assisting directly to locate your application record. Please wait.",
+        "hi": "कर्मचारी आपका रिकॉर्ड खोजने में मदद कर रहे हैं। कृपया प्रतीक्षा करें।",
+        "mr": "कर्मचारी तुमचा अर्ज शोधण्यात थेट मदत करत आहेत. कृपया प्रतीक्षा करा."
+      },
+      "clerk_hint": {
+        "en": "Manual physical register lookup or grievance escalation.",
+        "hi": "मैनुअल रजिस्टर जांच अथवा शिकायत दर्ज करें।",
+        "mr": "मॅन्युअल रजिस्टर तपासणी किंवा तक्रार निवारण करा."
+      },
+      "active_vocab": ["wait", "thank_you", "slow"],
+      "confidence_threshold": 0.60,
+      "min_margin": 0.10,
+      "transitions": {
+        "wait": "call_clerk",
+        "thank_you": "completed",
+        "slow": "call_clerk"
+      },
+      "timeout_seconds": 60,
+      "on_timeout": "completed"
+    },
+    "completed": {
+      "id": "completed",
+      "prompt": {
+        "en": "Status inquiry completed. Thank you! (Sign THANK YOU to return)",
+        "hi": "स्थिति जांच पूर्ण हुई। धन्यवाद! (वापस जाने के लिए धन्यवाद का संकेत दें)",
+        "mr": "स्थिती तपासणी पूर्ण झाली. धन्यवाद! (मागे जाण्यासाठी धन्यवाद खूण करा)"
+      },
+      "clerk_hint": {
+        "en": "Status shared with citizen. Provide tracking printout or dispatch date.",
+        "hi": "स्थिति साझा की गई। पावती अथवा वितरण तिथि प्रदान करें।",
+        "mr": "स्थिती सांगितली. पोचपावती किंवा वितरण तारीख द्या."
+      },
+      "active_vocab": ["thank_you"],
+      "confidence_threshold": 0.60,
+      "min_margin": 0.10,
+      "transitions": {
+        "thank_you": "select_service_type"
+      },
+      "timeout_seconds": 30,
+      "on_timeout": "select_service_type"
+    }
+  }
+}

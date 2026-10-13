@@ -1,0 +1,33 @@
+{
+  "vocabulary": [
+    "i",
+    "need",
+    "certificate",
+    "birth",
+    "death",
+    "income",
+    "address",
+    "form",
+    "help",
+    "where",
+    "wait",
+    "fee",
+    "yes",
+    "no",
+    "repeat",
+    "slow",
+    "thank_you",
+    "name",
+    "document",
+    "status",
+    "no_sign",
+    "unknown"
+  ],
+  "num_classes": 22,
+  "model_size_bytes": 12756,
+  "input_shape": [
+    1,
+    30,
+    291
+  ]
+}

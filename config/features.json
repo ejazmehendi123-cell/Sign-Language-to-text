@@ -101,7 +101,7 @@
       "tier": 3
     },
     "f21_domain_extensibility": {
-      "enabled": false,
+      "enabled": true,
       "description": "Config-driven retargeting to hospital, railway, or banking counters",
       "tier": 3
     },
@@ -109,6 +109,26 @@
       "enabled": true,
       "description": "Offline synthetic landmark playback and presenter cheat sheet",
       "tier": 3
+    },
+    "adapter_session_sync": {
+      "enabled": false,
+      "description": "SessionSync adapter: offline BroadcastChannel (false) vs Firebase Firestore sync (true)",
+      "tier": 1
+    },
+    "adapter_speech_to_text": {
+      "enabled": true,
+      "description": "SpeechToText adapter: typed input only (false) vs browser Web Speech API (true)",
+      "tier": 1
+    },
+    "adapter_sentence_polisher": {
+      "enabled": false,
+      "description": "SentencePolisher adapter: deterministic template engine (false) vs Firebase AI Logic Gemini (true)",
+      "tier": 2
+    },
+    "adapter_analytics": {
+      "enabled": false,
+      "description": "Analytics adapter: local in-memory/IndexedDB (false) vs anonymous Firestore aggregation (true)",
+      "tier": 2
     }
   }
 }
