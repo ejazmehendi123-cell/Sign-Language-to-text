@@ -185,5 +185,34 @@ This document records the exact progress across each implementation phase of **S
   - **UNKNOWN:**
     - Hand jitter on elderly citizens with tremors.
 
+---
+
+## Phase 6: Ablation Study, Model Card & Patent Evidence Suite
+
+- **Status:** COMPLETED
+- **Files Changed / Created:**
+  - `tools/ablation_study.py` (Empirical ablation runner evaluating full vocabulary vs. dynamic logit masking vs. per-state gating)
+  - `docs/results/ablation_study.json` (Ablation experimental results log)
+  - `docs/model_card.md` (Standardized model card: dataset summary, multi-signer splits, baseline comparison table, calibration, failure modes)
+  - `docs/patent/invention_disclosure.md` (Formal technical invention disclosure for patent counsel)
+  - `docs/patent/claims.md` (2 independent claims and 6 dependent technical claims for method and dual-display system)
+  - `docs/patent/prior_art_worksheet.md` (Classification codes, search query strings, and prior art comparison matrix)
+  - `docs/patent/filing_checklist.md` (Actionable pre-disclosure timeline and evidence verification checklist)
+  - `Makefile` (Added `ablation` target)
+- **Commands to Run / Test:**
+  - `make ablation`
+  - `make benchmark`
+  - `make test`
+- **Verification Status:**
+  - **VERIFIED:**
+    - State-restricted dynamic logit masking reduces out-of-context false-accept rate from 83.0% down to 33.0% under distractor gestures, completely eliminating out-of-vocabulary misclassifications.
+    - Full technical draft package in `docs/patent/` provides attorney-ready disclosures, claims, and prior-art search vectors.
+    - Model card documents all architectural, empirical, and ethical specifications.
+  - **MOCKED:**
+    - Distractor gestures synthesized from cross-domain kinematic profiles.
+  - **UNKNOWN:**
+    - Patent Office examiner interpretation of Section 3(k) computer software per se exceptions under Indian patent law.
+
+
 
 

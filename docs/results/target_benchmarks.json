@@ -1,5 +1,5 @@
 {
-  "benchmark_timestamp": 1791877966,
+  "benchmark_timestamp": 1791879319,
   "targets": {
     "held_out_signer_top1_accuracy": {
       "value": 100.0,
@@ -12,7 +12,7 @@
       "status": "PASS"
     },
     "sign_end_to_text_latency_p95_ms": {
-      "value": 2.01,
+      "value": 1.92,
       "target": "< 800 ms",
       "status": "PASS"
     },

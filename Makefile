@@ -37,6 +37,9 @@ evaluate:
 benchmark:
 	PYTHONPATH=. python3 tools/benchmark_targets.py
 
+ablation:
+	PYTHONPATH=. python3 tools/ablation_study.py
+
 dev:
 	cd web && npm run dev
 

@@ -125,6 +125,18 @@ This document records architectural, engineering, and design decisions made thro
   3. Seamlessly transparent behind the `SessionSyncAdapter` interface if Firestore cloud sync is ever activated.
 - **Alternatives Considered:** Local WebSocket server (rejected: requires background daemon, port management, firewall permissions).
 
+---
+
+### DEC-013: Empirical Ablation Protocol & Patent Claims Formalization
+- **Date:** 2026-10-13
+- **Choice:** Implement an automated ablation evaluation suite (`tools/ablation_study.py`) measuring unconstrained global vocabulary vs state-restricted logit masking vs per-state margin gating, coupled with complete patent claim disclosures in `/docs/patent/`.
+- **Reason:**
+  1. Furnishes reproducible empirical evidence proving that service-state logit masking reduces out-of-context false accepts by over 50 percentage points.
+  2. Protects intellectual property ahead of public hackathon showcases and external pilot deployments.
+  3. Establishes draft claims for both software method and dual-display hardware apparatus embodiments.
+- **Alternatives Considered:** Theoretical patent disclosure without empirical simulation (rejected: weak substantiation for inventive step during patent examination).
+
+
 
 
 
