@@ -6,12 +6,19 @@ import {
   AlertTriangle,
   Building,
   HeartPulse,
+  Camera,
+  VideoOff,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  Sparkles,
 } from 'lucide-react';
 
 import { FlowEngine, ServiceFlow, RecognitionResult } from '../services/flowEngine';
 import { inferenceService } from '../services/inference';
 import { preprocessTakeFrames, calculateMotionEnergy } from '../services/preprocess';
 import { SessionSyncAdapter, SessionMessage } from '../services/adapters/types';
+import { initLandmarkers, extractLandmarksFromVideo, generateMockLandmarks } from '../services/mediapipe';
 import { FrameLandmarks, VocabularyItem } from '../types';
 
 // Flow and vocab configs
@@ -76,16 +83,24 @@ export const KioskView: React.FC<KioskViewProps> = ({
 
   // Candidate recognition state
   const [candidateResult, setCandidateResult] = useState<RecognitionResult | null>(null);
-  const [isDetecting] = useState<boolean>(true);
   const [isSigningActive, setIsSigningActive] = useState<boolean>(false);
   const [motionEnergy, setMotionEnergy] = useState<number>(0);
   const [lastClerkReply, setLastClerkReply] = useState<string | null>(null);
   const [clerkPictogram, setClerkPictogram] = useState<string>('💬');
 
+  // Camera & Stream State
+  const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
+  const [useMockStream, setUseMockStream] = useState<boolean>(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [showSkeleton, setShowSkeleton] = useState<boolean>(true);
+  const [isInitializingCamera, setIsInitializingCamera] = useState<boolean>(false);
+
   // Video and landmark elements
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frameBufferRef = useRef<FrameLandmarks[]>([]);
   const prevFrameRef = useRef<FrameLandmarks | null>(null);
+  const frameCountRef = useRef<number>(0);
 
   // Initialize flow engine on flow switch
   useEffect(() => {
@@ -145,59 +160,123 @@ export const KioskView: React.FC<KioskViewProps> = ({
     inferenceService.loadModel();
   }, []);
 
-  // Frame processing loop & synthetic demonstration feed
+  // Camera start helper
+  const startCamera = async () => {
+    setCameraError(null);
+    setIsInitializingCamera(true);
+    try {
+      await initLandmarkers();
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: 'user',
+        },
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+        setIsCameraActive(true);
+        setUseMockStream(false);
+      }
+    } catch (err: any) {
+      console.warn('Unable to access webcam in KioskView, switching to simulation stream:', err);
+      setCameraError(err.message || 'Webcam permission denied');
+      setUseMockStream(true);
+      setIsCameraActive(false);
+    } finally {
+      setIsInitializingCamera(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current?.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach((track) => track.stop());
+      videoRef.current.srcObject = null;
+    }
+    setIsCameraActive(false);
+    setUseMockStream(true);
+  };
+
+  // Start webcam on mount and cleanup on unmount
+  useEffect(() => {
+    startCamera();
+    return () => {
+      if (videoRef.current?.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
+
+  // Frame processing loop & real-time landmark inference
   useEffect(() => {
     let animId: number;
     let fixtureFrameIdx = 0;
     const fixtureFrames = (sampleTakeFixture as any).frames as FrameLandmarks[];
 
     const loop = async () => {
-      if (isDetecting && fixtureFrames.length > 0) {
-        // Read next landmark frame (cycling through fixture or camera)
-        const frame = fixtureFrames[fixtureFrameIdx % fixtureFrames.length];
-        fixtureFrameIdx++;
+      const now = performance.now();
+      frameCountRef.current++;
+      let frame: FrameLandmarks;
 
-        // Render skeleton on canvas
-        const canvas = canvasRef.current;
-        if (canvas) {
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            drawLandmarksOnCanvas(ctx, frame, canvas.width, canvas.height);
+      const video = videoRef.current;
+      const isVideoPlaying = video && !video.paused && !video.ended && video.readyState >= 2;
+
+      if (!useMockStream && isVideoPlaying) {
+        frame = extractLandmarksFromVideo(video, now);
+      } else if (fixtureFrames.length > 0) {
+        frame = fixtureFrames[fixtureFrameIdx % fixtureFrames.length];
+        fixtureFrameIdx++;
+      } else {
+        frame = generateMockLandmarks(now);
+      }
+
+      // Render skeleton on canvas
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          if (showSkeleton) {
+            drawLandmarksOnCanvas(ctx, frame, canvas.width, canvas.height, isCameraActive && !useMockStream);
+          } else {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
           }
         }
+      }
 
-        // Compute kinetic motion energy
-        if (prevFrameRef.current) {
-          const energy = calculateMotionEnergy(prevFrameRef.current, frame);
-          setMotionEnergy(energy);
-          const active = energy > 0.02;
-          setIsSigningActive(active);
-        }
-        prevFrameRef.current = frame;
+      // Compute kinetic motion energy
+      if (prevFrameRef.current) {
+        const energy = calculateMotionEnergy(prevFrameRef.current, frame);
+        setMotionEnergy(energy);
+        const active = energy > 0.02;
+        setIsSigningActive(active);
+      }
+      prevFrameRef.current = frame;
 
-        // Buffer frames
-        frameBufferRef.current.push(frame);
-        if (frameBufferRef.current.length > 30) {
-          frameBufferRef.current.shift();
-        }
+      // Buffer frames for ONNX sequence classification
+      frameBufferRef.current.push(frame);
+      if (frameBufferRef.current.length > 30) {
+        frameBufferRef.current.shift();
+      }
 
-        // Run inference every 30 frames if candidate not currently awaiting confirmation
-        if (frameBufferRef.current.length === 30 && !candidateResult && fixtureFrameIdx % 45 === 0) {
-          const flatFeatures = preprocessTakeFrames(frameBufferRef.current);
-          const res = await inferenceService.predict(flatFeatures, flowEngine);
-          setCandidateResult(res);
+      // Run inference every 30-45 frames if candidate not currently awaiting confirmation
+      if (frameBufferRef.current.length === 30 && !candidateResult && frameCountRef.current % 45 === 0) {
+        const flatFeatures = preprocessTakeFrames(frameBufferRef.current);
+        const res = await inferenceService.predict(flatFeatures, flowEngine);
+        setCandidateResult(res);
 
-          // Broadcast candidate preview to clerk
-          syncAdapter.sendMessage({
-            sender: 'citizen',
-            type: 'sign_candidate',
-            payload: {
-              label: res.topLabel,
-              confidence: res.confidence,
-              is_confident: res.isConfident,
-            },
-          });
-        }
+        // Broadcast candidate preview to clerk
+        syncAdapter.sendMessage({
+          sender: 'citizen',
+          type: 'sign_candidate',
+          payload: {
+            label: res.topLabel,
+            confidence: res.confidence,
+            is_confident: res.isConfident,
+          },
+        });
       }
 
       animId = requestAnimationFrame(loop);
@@ -205,7 +284,7 @@ export const KioskView: React.FC<KioskViewProps> = ({
 
     animId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(animId);
-  }, [isDetecting, candidateResult, flowEngine]);
+  }, [useMockStream, isCameraActive, showSkeleton, candidateResult, flowEngine]);
 
   const currentState = flowEngine.getCurrentState();
   const promptText = currentState?.prompt[currentLang as 'en' | 'hi' | 'mr'] || currentState?.prompt.en;
@@ -245,6 +324,28 @@ export const KioskView: React.FC<KioskViewProps> = ({
   const handleRedoCandidate = () => {
     setCandidateResult(null);
     frameBufferRef.current = [];
+  };
+
+  // Direct simulation trigger for immediate testing
+  const handleDirectSignTest = (signId: string) => {
+    const res: RecognitionResult = {
+      topLabel: signId,
+      confidence: 0.96,
+      margin: 0.85,
+      isConfident: true,
+      latencyMs: 1.5,
+      needsRetry: false,
+    };
+    setCandidateResult(res);
+    syncAdapter.sendMessage({
+      sender: 'citizen',
+      type: 'sign_candidate',
+      payload: {
+        label: signId,
+        confidence: 0.96,
+        is_confident: true,
+      },
+    });
   };
 
   // Find vocabulary item details
@@ -319,7 +420,7 @@ export const KioskView: React.FC<KioskViewProps> = ({
           <select
             value={selectedFlowId}
             onChange={(e) => setSelectedFlowId(e.target.value)}
-            className="bg-slate-800 text-slate-200 font-bold border border-slate-700 px-3 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            className="bg-slate-800 text-slate-200 font-bold border border-slate-700 px-3 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer"
           >
             {activeDomain === 'government' ? (
               <>
@@ -364,28 +465,110 @@ export const KioskView: React.FC<KioskViewProps> = ({
         </div>
       </header>
 
+      {/* Camera Permission Alert Banner (if webcam blocked) */}
+      {cameraError && (
+        <div className="bg-amber-900/50 border-b border-amber-600/60 px-6 py-2.5 flex items-center justify-between text-amber-200 text-xs">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-amber-400" />
+            <span>
+              <strong>Webcam status:</strong> {cameraError}. Running in Demo Simulation Mode. To use your camera, allow camera permission in your browser address bar.
+            </span>
+          </div>
+          <button
+            onClick={startCamera}
+            className="bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold px-3 py-1 rounded-lg transition-colors cursor-pointer"
+          >
+            Retry Camera
+          </button>
+        </div>
+      )}
+
       {/* 3. MAIN KIOSK BODY */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 p-6 gap-6 max-w-7xl mx-auto w-full">
         {/* LEFT COLUMN: Camera & Skeleton View (7 Cols) */}
         <div className="lg:col-span-7 flex flex-col gap-4">
           <div className="relative bg-slate-900 border-2 border-slate-800 rounded-3xl overflow-hidden shadow-2xl aspect-video flex items-center justify-center">
-            {/* Realtime Skeleton Canvas */}
+            {/* Real Webcam Video (mirrored horizontally for intuitive selfie perspective) */}
+            <video
+              ref={videoRef}
+              className={`w-full h-full object-cover transform -scale-x-100 ${
+                isCameraActive && !useMockStream ? 'opacity-90' : 'hidden'
+              }`}
+              muted
+              playsInline
+              autoPlay
+            />
+
+            {/* Realtime Skeleton Landmark Canvas */}
             <canvas
               ref={canvasRef}
               width={640}
               height={480}
-              className="w-full h-full object-cover"
+              className={`w-full h-full object-cover ${
+                isCameraActive && !useMockStream
+                  ? 'absolute inset-0 transform -scale-x-100 pointer-events-none'
+                  : ''
+              }`}
             />
 
-            {/* Live Indicator Badges */}
-            <div className="absolute top-4 left-4 flex items-center gap-2">
-              <span className="flex items-center gap-1.5 bg-slate-950/80 backdrop-blur-md border border-slate-700 px-3 py-1 rounded-full text-xs font-bold text-slate-200">
-                <span className={`w-2.5 h-2.5 rounded-full ${isSigningActive ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'}`} />
-                {isSigningActive ? 'SIGNING DETECTED' : 'READY TO SIGN'}
-              </span>
-              <span className="bg-slate-950/80 backdrop-blur-md border border-slate-700 px-2.5 py-1 rounded-full text-xs font-mono text-cyan-300">
-                Energy: {(motionEnergy * 100).toFixed(1)}
-              </span>
+            {/* Top Overlay Bar: Camera Status & Controls */}
+            <div className="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-auto">
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 bg-slate-950/85 backdrop-blur-md border border-slate-700 px-3 py-1 rounded-full text-xs font-bold text-slate-200">
+                  <span
+                    className={`w-2.5 h-2.5 rounded-full ${
+                      isSigningActive
+                        ? 'bg-emerald-400 animate-ping'
+                        : isCameraActive && !useMockStream
+                        ? 'bg-emerald-400'
+                        : 'bg-cyan-400'
+                    }`}
+                  />
+                  {isSigningActive
+                    ? 'SIGNING DETECTED'
+                    : isCameraActive && !useMockStream
+                    ? 'LIVE WEBCAM'
+                    : 'SIMULATION DEMO'}
+                </span>
+
+                <span className="bg-slate-950/85 backdrop-blur-md border border-slate-700 px-2.5 py-1 rounded-full text-xs font-mono text-cyan-300">
+                  Energy: {(motionEnergy * 100).toFixed(1)}
+                </span>
+              </div>
+
+              {/* Camera Toggles */}
+              <div className="flex items-center gap-1.5 bg-slate-950/85 backdrop-blur-md p-1 rounded-xl border border-slate-700 text-xs font-bold">
+                {isCameraActive && !useMockStream ? (
+                  <button
+                    onClick={stopCamera}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 transition cursor-pointer"
+                    title="Switch to Demo Simulation Stream"
+                  >
+                    <VideoOff className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Demo Stream</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={startCamera}
+                    disabled={isInitializingCamera}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-emerald-300 hover:text-emerald-200 bg-emerald-950/60 border border-emerald-700/60 hover:bg-emerald-900 transition cursor-pointer"
+                    title="Activate Live Webcam"
+                  >
+                    <Camera className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>{isInitializingCamera ? 'Starting...' : 'Use Webcam'}</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => setShowSkeleton(!showSkeleton)}
+                  className={`p-1.5 rounded-lg transition cursor-pointer ${
+                    showSkeleton ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Toggle Landmark Skeleton"
+                >
+                  {showSkeleton ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                </button>
+              </div>
             </div>
 
             {/* Allowed Signs Chip Row */}
@@ -405,14 +588,37 @@ export const KioskView: React.FC<KioskViewProps> = ({
             </div>
           </div>
 
-          {/* Current Service Flow Prompt Box */}
-          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg">
-            <div className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+          {/* Current Service Flow Prompt Box & Quick-Sign Testing Chips */}
+          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
+            <div className="text-xs font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-1.5">
               <HelpCircle className="w-4 h-4" />
               Service Step: {currentState.id.replace(/_/g, ' ')}
             </div>
             <div className="text-2xl font-bold text-white leading-snug">
               {promptText}
+            </div>
+
+            {/* Quick Testing Bar: Click any active sign to test without gesturing */}
+            <div className="pt-2 border-t border-slate-800/80">
+              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>One-Click Test (Sign in front of camera, or tap below):</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {currentState.active_vocab.map((vId) => {
+                  const item = getVocabItem(vId);
+                  const label = item?.labels[currentLang as 'en' | 'hi' | 'mr'] || vId;
+                  return (
+                    <button
+                      key={vId}
+                      onClick={() => handleDirectSignTest(vId)}
+                      className="bg-cyan-950/70 hover:bg-cyan-800/80 border border-cyan-700/60 hover:border-cyan-400 text-cyan-200 text-xs px-3 py-1.5 rounded-xl font-bold transition-all active:scale-95 cursor-pointer shadow"
+                    >
+                      Sign "{label.toUpperCase()}"
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
@@ -425,11 +631,13 @@ export const KioskView: React.FC<KioskViewProps> = ({
               <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                 <span>Recognized Sign (Candidate)</span>
                 {candidateResult && (
-                  <span className={`px-2 py-0.5 rounded-full font-mono font-bold ${
-                    candidateResult.isConfident
-                      ? 'bg-emerald-950 border border-emerald-700 text-emerald-300'
-                      : 'bg-amber-950 border border-amber-700 text-amber-300'
-                  }`}>
+                  <span
+                    className={`px-2 py-0.5 rounded-full font-mono font-bold ${
+                      candidateResult.isConfident
+                        ? 'bg-emerald-950 border border-emerald-700 text-emerald-300'
+                        : 'bg-amber-950 border border-amber-700 text-amber-300'
+                    }`}
+                  >
                     {(candidateResult.confidence * 100).toFixed(0)}% Match
                   </span>
                 )}
@@ -541,13 +749,16 @@ function drawLandmarksOnCanvas(
   ctx: CanvasRenderingContext2D,
   frame: FrameLandmarks,
   width: number,
-  height: number
+  height: number,
+  hasVideoUnderneath: boolean = false
 ) {
   ctx.clearRect(0, 0, width, height);
 
-  // Background tint
-  ctx.fillStyle = '#090d16';
-  ctx.fillRect(0, 0, width, height);
+  if (!hasVideoUnderneath) {
+    // Dark background tint for simulation/offline mode
+    ctx.fillStyle = '#090d16';
+    ctx.fillRect(0, 0, width, height);
+  }
 
   // Draw Upper Body Pose (Gold/Amber)
   if (frame.masks.pose && frame.pose.length >= 17) {
